@@ -1,0 +1,1856 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Misión: Rescatar la CUN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e1020;
+  --panel: #1a1c2c;
+  --panel2: #141626;
+  --ink: #f4f4f4;
+  --dim: #94b0c2;
+  --mute: #566c86;
+  --line: #333c57;
+  --cyan: #73eff7;
+  --blue: #41a6f6;
+  --indigo: #3b5dc9;
+  --green: #a7f070;
+  --green2: #38b764;
+  --yellow: #ffcd75;
+  --orange: #ef7d57;
+  --red: #e8475f;
+  --purple: #5d275d;
+  --pink: #ff6fae;
+  /* ancho máximo del televisor: lo que cabe en el alto de la ventana (el TV mide ~0.97 de su ancho en alto) */
+  --tvw: min(1100px, calc((100vh - 100px) * 1.03));
+  --pix: "Press Start 2P", "Courier New", monospace;
+  --mono: "VT323", "Courier New", monospace;
+  /* pixel-notched corners */
+  --notch: polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+                   100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+                   4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px));
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 21px;
+  line-height: 1.15;
+  min-height: 100vh;
+  -webkit-font-smoothing: none;
+}
+.hidden { display: none !important; }
+.px { clip-path: var(--notch); border: 4px solid var(--line); background: var(--panel); }
+button, input { font-family: inherit; }
+
+/* ---------- header ---------- */
+header {
+  display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 4px solid var(--line); background: var(--panel);
+}
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand img { width: 32px; height: 32px; image-rendering: pixelated; }
+.brand h1 { font: 12px/1.5 var(--pix); margin: 0; color: var(--yellow); letter-spacing: 0; }
+.brand small { display: block; font: 8px/1.6 var(--pix); color: var(--dim); }
+.hud { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; font: 10px/1 var(--pix); }
+.hud .k { color: var(--dim); margin-right: 6px; }
+.hud .v { color: var(--ink); }
+.hearts { display: inline-flex; gap: 4px; vertical-align: middle; }
+.hearts img { width: 24px; height: 24px; image-rendering: pixelated; }
+#h-puntos { color: var(--yellow); }
+.hearts img.pop { animation: pop .6s steps(6, end); }
+@keyframes pop { 0% { transform: scale(.4); filter: brightness(3); } 50% { transform: scale(1.5); filter: brightness(2); } 100% { transform: scale(1); filter: none; } }
+
+/* ---------- layout ---------- */
+main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 420px); gap: 16px; padding: 16px; align-items: start; }
+@supports (height: 100dvh) { :root { --tvw: min(1100px, calc((100dvh - 100px) * 1.03)); } }
+.left { min-width: 0; width: 100%; max-width: var(--tvw); margin: 0 auto; }
+@media (max-width: 1000px) { main { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- stage ---------- */
+.stage { position: relative; background: #05060d; overflow: hidden; display: grid; align-content: center; }
+.stage.shake { animation: shake .35s steps(2, end); }
+.stage.flash::before { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: rgba(167,240,112,.28); animation: fade .5s steps(4, end) forwards; }
+.stage.hurt::before { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: rgba(232,71,95,.34); animation: fade .5s steps(4, end) forwards; }
+canvas#cv.tap { animation: tap .15s steps(3, end); }
+@keyframes tap { 0% { transform: translate(0, 0); } 33% { transform: translate(2px, -1px); } 66% { transform: translate(-2px, 1px); } 100% { transform: translate(0, 0); } }
+@keyframes shake { 0%{transform:translate(0,0)} 25%{transform:translate(-6px,3px)} 50%{transform:translate(6px,-3px)} 75%{transform:translate(-4px,-2px)} 100%{transform:translate(0,0)} }
+@keyframes fade { from{opacity:1} to{opacity:0} }
+canvas#cv { display: block; width: 100%; aspect-ratio: 240 / 176; image-rendering: pixelated; background: #05060d; }
+
+#banner {
+  position: absolute; left: 50%; top: 14px; transform: translateX(-50%); z-index: 3; pointer-events: none;
+  font: 10px/1.6 var(--pix); color: var(--ink); background: rgba(14,16,32,.92); padding: 10px 14px;
+  border: 4px solid var(--yellow); text-align: center; opacity: 0; max-width: 92%;
+}
+#banner.on { animation: banner 2.6s steps(10, end) forwards; }
+@keyframes banner { 0%{opacity:0} 8%{opacity:1} 80%{opacity:1} 100%{opacity:0} }
+
+.overlay { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: max(14px, 3.5cqw); overflow: auto; background: rgba(5,6,13,.82); }
+.dlg { width: min(580px, 100%); padding: 16px 18px; }
+.dlg h2 { font: 12px/1.6 var(--pix); margin: 0 0 10px; color: var(--yellow); }
+.dlg h2.ok { color: var(--green); }
+.dlg h2.mal { color: var(--red); }
+.dlg .sub { font: 8px/1.8 var(--pix); color: var(--dim); margin: 0 0 10px; }
+.dlg p { margin: 8px 0; }
+.dlg .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+pre.code { margin: 8px 0; padding: 10px 12px; background: #0a0b16; border: 3px solid var(--line); font: 24px/1.15 var(--mono); white-space: pre; overflow-x: auto; color: var(--ink); }
+.pista { color: var(--cyan); border-left: 4px solid var(--cyan); padding-left: 10px; }
+.aviso { color: var(--orange); min-height: 1.15em; }
+.ansrow { display: flex; gap: 10px; align-items: stretch; margin-top: 8px; }
+.ansrow .pr { font: 12px var(--pix); color: var(--green); align-self: center; }
+.ansrow input { flex: 1; min-width: 0; background: #0a0b16; color: var(--ink); border: 3px solid var(--blue); padding: 8px 10px; font-size: 24px; outline: none; }
+.ansrow input:focus { border-color: var(--yellow); }
+
+.btn {
+  font: 10px/1 var(--pix); color: #1a1c2c; background: var(--yellow); border: 0; padding: 12px 14px; cursor: pointer;
+  box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 4px 4px 0 rgba(255,255,255,.35), 0 4px 0 #8a5a1c;
+  clip-path: var(--notch); position: relative; top: 0;
+}
+.btn:hover { filter: brightness(1.1); }
+.btn:active { top: 3px; box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 4px 4px 0 rgba(255,255,255,.35), 0 1px 0 #8a5a1c; }
+.btn.alt { background: var(--blue); box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 4px 4px 0 rgba(255,255,255,.35), 0 4px 0 #1d4f8a; }
+.btn.dim { background: var(--mute); color: var(--ink); box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 4px 4px 0 rgba(255,255,255,.2), 0 4px 0 #333c57; }
+.btn[disabled] { filter: grayscale(1) brightness(.6); cursor: wait; }
+:focus-visible { outline: 3px dashed var(--cyan); outline-offset: 2px; }
+
+#ov-intro .dlg { text-align: left; }
+#ov-intro .logo { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+#ov-intro .logo img { width: 56px; height: 56px; image-rendering: pixelated; }
+#ov-intro h1 { font: 14px/1.5 var(--pix); color: var(--yellow); margin: 0; }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 10px 0 0; font-size: 20px; color: var(--dim); }
+.keys b { color: var(--cyan); font-weight: normal; }
+.loadbar { height: 18px; border: 3px solid var(--line); background: #0a0b16; margin: 10px 0 4px; overflow: hidden; }
+.loadbar i { display: block; height: 100%; width: 30%; background: repeating-linear-gradient(90deg, var(--green2) 0 10px, #1d7f43 10px 12px); animation: load 1.2s steps(8, end) infinite; }
+@keyframes load { from{margin-left:-30%} to{margin-left:100%} }
+.loadbar.done i { animation: none; width: 100%; margin: 0; }
+.status { font-size: 20px; color: var(--dim); min-height: 1.2em; }
+.status.err { color: var(--red); }
+.namerow { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.namerow input { flex: 1; min-width: 160px; background: #0a0b16; color: var(--ink); border: 3px solid var(--blue); padding: 8px 10px; font-size: 24px; outline: none; }
+.namerow input:focus { border-color: var(--yellow); }
+.bar { height: 18px; background: #0a0b16; border: 3px solid var(--line); margin: 6px 0 12px; }
+.bar i { display: block; height: 100%; background: var(--green2); }
+.big { font: 20px/1.4 var(--pix); color: var(--yellow); }
+.extra { color: var(--green); }
+
+/* ---------- televisor antiguo (CRT) ---------- */
+/* Todo se mide en cqw (ancho del televisor) para que escale con la pantalla */
+.tv { container-type: inline-size; width: 100%; }
+.tv-antenna { position: relative; height: 11cqw; margin-bottom: -1.2cqw; }
+.tv-antenna i { position: absolute; left: 50%; bottom: 0; width: max(3px, .8cqw); height: 12cqw; transform-origin: 50% 100%;
+  background: linear-gradient(90deg, #f4f4f4, #94b0c2 55%, #566c86); }
+.tv-antenna i:nth-child(1) { transform: translateX(-50%) rotate(-33deg); }
+.tv-antenna i:nth-child(2) { transform: translateX(-50%) rotate(29deg); }
+.tv-antenna i::after { content: ""; position: absolute; top: max(-5px, -1cqw); left: 50%; width: max(6px, 1.6cqw); height: max(6px, 1.6cqw);
+  transform: translateX(-50%); background: var(--yellow); }
+.tv-antenna::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 14cqw; height: 3.4cqw; transform: translateX(-50%);
+  background: linear-gradient(#566c86, #333c57); border-radius: 14cqw 14cqw 0 0; box-shadow: 0 -2px 0 #94b0c2 inset; }
+.tv-body { position: relative; z-index: 1; padding: 2.6cqw 2.6cqw 2cqw; border-radius: 3.4cqw; border: max(3px, .6cqw) solid #2b1810;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.11) 0 .35cqw, transparent .35cqw 1.1cqw),
+    linear-gradient(180deg, #94603a, #62391f 70%, #4d2c18);
+  box-shadow: inset 0 0 0 max(2px, .35cqw) rgba(255,205,117,.16), 0 1.4cqw 0 rgba(0,0,0,.45); }
+.tv-bezel { padding: 2.2cqw; border-radius: 3.6cqw; background: linear-gradient(145deg, #34343f, #0d0d12);
+  box-shadow: inset 0 0 0 max(2px, .3cqw) #000, inset .7cqw .7cqw 1.2cqw rgba(255,255,255,.08), inset -.7cqw -.7cqw 1.4cqw rgba(0,0,0,.65); }
+.tv-screen { position: relative; isolation: isolate; overflow: hidden; border-radius: 4.6cqw / 5.6cqw; background: #05060d;
+  box-shadow: 0 0 0 max(2px, .35cqw) #000, 0 0 3cqw rgba(115,239,247,.2); animation: tvon .8s steps(8, end); }
+@keyframes tvon { 0% { transform: scale(1, .01); filter: brightness(4); } 55% { transform: scale(1, .08); filter: brightness(3); } 100% { transform: none; filter: none; } }
+/* capa CRT: líneas de barrido, viñeta curva, reflejo del cristal, banda que rueda y parpadeo */
+.crt { position: absolute; inset: 0; z-index: 20; pointer-events: none; border-radius: inherit; overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 52%, rgba(0,0,0,.6) 100%),
+    linear-gradient(118deg, rgba(255,255,255,.08) 0%, transparent 26%),
+    repeating-linear-gradient(to bottom, rgba(0,0,0,.3) 0 1px, transparent 1px 3px);
+  box-shadow: inset 0 0 6cqw rgba(0,0,0,.65); animation: flicker 6s steps(1, end) infinite; }
+.crt::before { content: ""; position: absolute; left: 0; right: 0; top: -22%; height: 20%;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,.06), transparent); animation: roll 8s linear infinite; }
+@keyframes roll { to { top: 112%; } }
+@keyframes flicker { 0%, 100% { opacity: 1; } 47% { opacity: .93; } 49% { opacity: 1; } 88% { opacity: .96; } }
+.tv.nofx .crt { display: none; }
+.tv.nofx .tv-screen { animation: none; }
+.tv-strip { display: flex; align-items: center; gap: 2cqw; padding: 2cqw 1cqw 0; }
+.tv-brand { font: max(6px, 1.3cqw)/1.4 var(--pix); color: var(--yellow); background: #2b1810; padding: .8cqw 1.4cqw; border-radius: .6cqw;
+  box-shadow: inset 0 0 0 2px #8a5a1c; white-space: nowrap; }
+.tv-led { flex: none; width: max(8px, 1.6cqw); height: max(8px, 1.6cqw); border-radius: 50%; background: #ff5555; box-shadow: 0 0 1.2cqw #ff5555; animation: led 2.4s steps(1, end) infinite; }
+@keyframes led { 50% { opacity: .55; } }
+.tv-grille { flex: 1; min-width: 0; height: max(16px, 4cqw); border-radius: .6cqw; box-shadow: inset 0 0 0 2px #2b1810;
+  background: repeating-linear-gradient(90deg, #1b0f09 0 .45cqw, #5a3420 .45cqw .9cqw); }
+.knobs { display: flex; gap: 1.8cqw; align-items: flex-start; flex: none; }
+.knobw { display: grid; justify-items: center; gap: .5cqw; font: max(6px, 1.05cqw) var(--pix); color: #e0bf94; }
+.knob { width: max(26px, 5cqw); height: max(26px, 5cqw); border-radius: 50%; border: 2px solid #14110f; padding: 0; cursor: pointer; position: relative; flex: none;
+  background: radial-gradient(circle at 35% 30%, #e6e6e6, #7a7f8c 58%, #2c2f38); box-shadow: 0 .4cqw 0 rgba(0,0,0,.45); transition: transform .25s steps(4, end); }
+.knob::after { content: ""; position: absolute; left: 50%; top: 9%; width: max(2px, .45cqw); height: 36%; background: #14110f; transform: translateX(-50%); }
+.knob.k1 { transform: rotate(-35deg); }
+.tv.nofx .knob.k1 { transform: rotate(145deg); }
+.knob.k2 { transform: rotate(50deg); cursor: default; }
+.tv-feet { display: flex; justify-content: space-between; padding: 0 10cqw; }
+.tv-feet i { width: 11cqw; height: 2.2cqw; background: #2b1810; border-radius: 0 0 1cqw 1cqw; }
+@container (max-width: 430px) { .tv-grille { display: none; } .tv-strip { justify-content: space-between; } }
+
+/* ---------- log / controls ---------- */
+.log { margin-top: 14px; padding: 10px 14px; min-height: 148px; font-size: 21px; display: flex; flex-direction: column; justify-content: flex-end; }
+.log div { padding: 1px 0; opacity: .55; }
+.log div:last-child { opacity: 1; }
+.log .sala { color: var(--yellow); }
+.log .ok { color: var(--green); }
+.log .mal { color: var(--red); }
+.log .info { color: var(--ink); }
+.dpad { display: none; margin: 14px auto 0; width: 190px; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.dpad button { font: 16px var(--pix); height: 56px; background: var(--indigo); color: var(--ink); border: 0; clip-path: var(--notch); cursor: pointer; box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 4px 4px 0 rgba(255,255,255,.2); }
+.dpad button:active { background: var(--blue); }
+.dpad .u { grid-column: 2; } .dpad .l { grid-column: 1; grid-row: 2; } .dpad .d { grid-column: 2; grid-row: 2; } .dpad .r { grid-column: 3; grid-row: 2; }
+@media (pointer: coarse) { .dpad { display: grid; } }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; color: var(--dim); font-size: 19px; align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend img { width: 24px; height: 24px; image-rendering: pixelated; }
+
+/* ---------- python trace panel ---------- */
+.trace { display: flex; flex-direction: column; height: calc(100vh - 110px); min-height: 420px; position: sticky; top: 12px; background: var(--panel2); }
+@media (max-width: 1000px) { .trace { position: static; height: 420px; } }
+.th { padding: 10px 12px; border-bottom: 4px solid var(--line); background: var(--panel); }
+.th .t1 { display: flex; justify-content: space-between; gap: 8px; align-items: center; font: 9px/1.6 var(--pix); color: var(--cyan); }
+.th .live { color: var(--green); }
+.th .live::before { content: "●"; margin-right: 6px; animation: blink 1s steps(2, start) infinite; }
+.th.paused .live { color: var(--orange); }
+.th.paused .live::before { animation: none; content: "❚❚"; }
+@keyframes blink { to { visibility: hidden; } }
+.th .t2 { font-size: 18px; color: var(--dim); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.th .t2 i { font-style: normal; }
+.cj { color: var(--cyan); } .cq { color: var(--pink); }
+#trace { flex: 1; overflow-y: auto; padding: 6px 0; font: 20px/1.1 var(--mono); }
+#trace::-webkit-scrollbar { width: 12px; } #trace::-webkit-scrollbar-thumb { background: var(--line); } #trace::-webkit-scrollbar-track { background: #0a0b16; }
+.r { display: flex; gap: 10px; padding: 1px 10px 1px 6px; white-space: pre; border-left: 4px solid transparent; color: var(--dim); }
+.r .no { flex: none; width: 3.2ch; text-align: right; color: var(--mute); }
+.r .src { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.r.j { border-left-color: var(--cyan); color: #cfe3ee; }
+.r.q { border-left-color: var(--pink); color: #f0d6e6; }
+.r.now { background: rgba(115,239,247,.16); color: var(--ink); }
+.r.q.now { background: rgba(255,111,174,.18); }
+.r.cmd { border-left-color: var(--yellow); background: rgba(255,205,117,.10); color: var(--yellow); margin-top: 6px; }
+.r.cmd .no { color: var(--yellow); }
+.r.call .src { color: var(--yellow); }
+.r.call .ar { font-style: normal; color: var(--green); margin-right: 4px; }
+.r.ret { color: var(--mute); } .r.ret .ar { font-style: normal; margin-right: 4px; }
+.r.out { color: var(--green); } .r.out .no { color: var(--green); }
+.r.rep, .r.err { color: var(--mute); font-style: italic; }
+.r.err { color: var(--red); font-style: normal; }
+.tk { color: var(--orange); } .ts { color: var(--green); } .tn { color: var(--yellow); } .tc { color: var(--mute); font-style: italic; } .tb { color: var(--blue); }
+.tf { display: flex; gap: 8px; padding: 10px 12px; border-top: 4px solid var(--line); background: var(--panel); flex-wrap: wrap; align-items: center; }
+.tf .btn { padding: 9px 10px; font-size: 8px; }
+.tf .cnt { margin-left: auto; font-size: 18px; color: var(--dim); }
+#trace { background-image: repeating-linear-gradient(to bottom, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1000px) {
+  main { padding: 12px; gap: 14px; }
+}
+/* los diálogos se compactan según el tamaño del televisor, no de la ventana */
+@container (max-width: 800px) {
+  .dlg { padding: 12px 14px; }
+  .dlg h2 { font-size: 10px; margin-bottom: 6px; }
+  .dlg p { margin: 5px 0; font-size: 19px; }
+  pre.code { font-size: 20px; padding: 7px 10px; margin: 5px 0; }
+  .ansrow input, .namerow input { font-size: 20px; padding: 6px 8px; }
+  .dlg .btns { margin-top: 8px; }
+  .btn { padding: 10px 12px; }
+  .keys { font-size: 17px; margin-top: 6px; }
+  #ov-intro h1 { font-size: 11px; }
+  #ov-intro .logo img { width: 40px; height: 40px; }
+  .loadbar { margin: 6px 0 2px; height: 14px; }
+}
+@container (max-width: 620px) {
+  .dlg { padding: 10px 10px; }
+  .dlg p, .status { font-size: 17px; }
+  pre.code { font-size: 18px; }
+  .keys { display: none; }
+  .btn { font-size: 8px; }
+  #banner { font-size: 7px; padding: 6px 8px; }
+}
+@media (max-width: 700px) {
+  body { font-size: 19px; }
+  header { padding: 10px 12px; gap: 8px 16px; }
+  .brand h1 { font-size: 10px; }
+  .brand img { width: 26px; height: 26px; }
+  .hud { gap: 6px 14px; font-size: 8px; }
+  .hearts img { width: 18px; height: 18px; }
+  main { padding: 8px; }
+  .stage { min-height: 420px; }
+  .dlg { padding: 12px 12px; }
+  .dlg h2 { font-size: 10px; }
+  pre.code { font-size: 20px; padding: 8px 10px; }
+  .ansrow input, .namerow input { font-size: 20px; }
+  .btn { padding: 11px 12px; }
+  .keys { font-size: 17px; }
+  .log { min-height: 120px; font-size: 19px; padding: 8px 10px; }
+  .legend { font-size: 17px; gap: 6px 12px; }
+  .legend img { width: 20px; height: 20px; }
+  .trace { height: 360px; min-height: 0; }
+  #trace { font-size: 18px; }
+  #banner { font-size: 8px; padding: 8px 10px; }
+}
+@media (max-width: 380px) {
+  .brand small { display: none; }
+  .hud .k { display: none; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  :root { --tvw: min(100%, 760px); }
+  .stage { min-height: 0; }
+  .trace { position: static; height: 300px; }
+}
+/* ---------- animación de inicio ---------- */
+.splash { z-index: 7; padding: 0; background: #05060d; cursor: pointer; overflow: hidden; }
+.splash canvas { display: block; width: 100%; aspect-ratio: 240 / 176; image-rendering: pixelated; }
+.splash .skip { position: absolute; right: max(8px, 1.6cqw); bottom: max(8px, 1.6cqw); z-index: 2; font: max(6px, 1.1cqw)/1 var(--pix); color: var(--dim);
+  background: rgba(5,6,13,.7); border: 2px solid var(--line); padding: .8cqw 1.2cqw; cursor: pointer; }
+.splash .skip:hover { color: var(--yellow); border-color: var(--yellow); }
+.splash.out { animation: splashout .35s steps(5, end) forwards; }
+@keyframes splashout { 0% { filter: brightness(1); opacity: 1; } 40% { filter: brightness(4); opacity: 1; transform: scale(1.02, .9); } 100% { filter: brightness(6); opacity: 0; transform: scale(1.1, .02); } }
+@media (prefers-reduced-motion: reduce) {
+  .splash.out { animation-duration: .01s; }
+  .crt, .crt::before, .tv-screen, .tv-led { animation: none; }
+  #banner.on { animation-duration: 0.01s; animation-fill-mode: forwards; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img id="logo" alt="">
+    <div>
+      <h1>MISIÓN: RESCATAR LA CUN</h1>
+      <small>ROGUELIKE DE SALAS · LÓGICA 100% PYTHON</small>
+    </div>
+  </div>
+  <div class="hud">
+    <span><span class="k">VIDAS</span><span class="hearts" id="h-vidas"></span></span>
+    <span><span class="k">PUNTOS</span><span class="v" id="h-puntos">0</span></span>
+    <span><span class="k">SALA</span><span class="v" id="h-sala">-/5</span></span>
+    <span><span class="k">NIVEL</span><span class="v" id="h-nivel">-</span></span>
+  </div>
+</header>
+
+<main>
+  <section class="left">
+    <div class="tv" id="tv">
+     <div class="tv-antenna" aria-hidden="true"><i></i><i></i></div>
+     <div class="tv-body">
+      <div class="tv-bezel">
+       <div class="tv-screen">
+    <div class="stage" id="stage">
+      <canvas id="cv" width="240" height="176"></canvas>
+      <div id="banner"></div>
+
+      <!-- animación de inicio (8 bits) -->
+      <div class="overlay splash" id="ov-splash" role="dialog" aria-label="Pantalla de inicio: Misión Rescatar la CUN. Pulsa una tecla para continuar.">
+        <canvas id="cv-splash" width="240" height="176"></canvas>
+        <button class="skip" id="btn-skip" type="button">SALTAR ▸</button>
+      </div>
+
+      <!-- intro / carga -->
+      <div class="overlay" id="ov-intro">
+        <div class="dlg px">
+          <div class="logo"><img id="logo2" alt=""><h1>MISIÓN:<br>RESCATAR LA CUN</h1></div>
+          <p>Año 2045. El servidor central de la CUN controla la luz, el agua y el tránsito. Un virus, <b style="color:var(--red);font-weight:normal">BUG MAYOR</b>, lo dañó.</p>
+          <p>Eres un programador aprendiz. Recorre las 5 salas, conéctate a los 3 nodos de cada una y responde qué imprimiría el código para abrir la puerta.</p>
+          <div class="keys">
+            <b>← ↑ ↓ → / WASD</b><span>moverte (un paso por turno)</span>
+            <b>Chocar con un nodo</b><span>abre la pregunta</span>
+            <b>pista</b><span>1 por pregunta: +7 en vez de +10</span>
+            <b>Fallar</b><span>pierdes 1 de tus 3 vidas</span>
+            <b>Corazón del mapa</b><span>recupera 1 vida (máx. 3)</span>
+          </div>
+          <div class="loadbar" id="loadbar"><i></i></div>
+          <div class="status" id="status">Cargando el intérprete de Python…</div>
+          <div class="namerow">
+            <input id="nombre" placeholder="¿Cómo te llamas?" maxlength="20" autocomplete="off" spellcheck="false">
+            <button class="btn" id="btn-jugar" disabled>JUGAR</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- pregunta -->
+      <div class="overlay hidden" id="ov-pregunta">
+        <div class="dlg px">
+          <h2 id="q-titulo"></h2>
+          <div class="sub" id="q-sub"></div>
+          <pre class="code" id="q-codigo"></pre>
+          <p id="q-enun"></p>
+          <p class="pista hidden" id="q-pista"></p>
+          <div class="aviso" id="q-aviso"></div>
+          <form class="ansrow" id="q-form" autocomplete="off">
+            <span class="pr">&gt;</span>
+            <input id="ans" maxlength="40" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Tu respuesta">
+            <button class="btn" type="submit">ENVIAR</button>
+          </form>
+          <div class="btns">
+            <button class="btn alt" type="button" id="btn-pista">PISTA</button>
+            <button class="btn dim" type="button" id="btn-salir">ESC · SALIR</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- resultado -->
+      <div class="overlay hidden" id="ov-resultado">
+        <div class="dlg px" id="res-box"></div>
+      </div>
+
+      <!-- fin -->
+      <div class="overlay hidden" id="ov-fin">
+        <div class="dlg px" id="fin-box"></div>
+      </div>
+    </div>
+        <div class="crt" aria-hidden="true"></div>
+       </div>
+      </div>
+      <div class="tv-strip">
+        <span class="tv-led" aria-hidden="true"></span>
+        <span class="tv-brand">CUNTRON 2045</span>
+        <span class="tv-grille" aria-hidden="true"></span>
+        <div class="knobs">
+          <div class="knobw"><button class="knob k1" id="knob-crt" type="button" aria-pressed="true" aria-label="Efecto CRT (líneas de barrido)" title="Efecto CRT: activar / desactivar"></button>CRT</div>
+          <div class="knobw" aria-hidden="true"><span class="knob k2"></span>VOL</div>
+        </div>
+      </div>
+     </div>
+     <div class="tv-feet" aria-hidden="true"><i></i><i></i></div>
+    </div>
+
+    <div class="log px" id="log" aria-live="polite"></div>
+
+    <div class="dpad" aria-label="Controles">
+      <button class="u" data-dx="0" data-dy="-1" aria-label="Arriba">▲</button>
+      <button class="l" data-dx="-1" data-dy="0" aria-label="Izquierda">◀</button>
+      <button class="d" data-dx="0" data-dy="1" aria-label="Abajo">▼</button>
+      <button class="r" data-dx="1" data-dy="0" aria-label="Derecha">▶</button>
+    </div>
+
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <aside class="trace px" aria-label="Código Python en ejecución">
+    <div class="th" id="th">
+      <div class="t1"><span>PYTHON EN VIVO</span><span class="live" id="live">EJECUTANDO</span></div>
+      <div class="t2"><i id="pyver">Python …</i><i class="cj">■ juego (&lt;juego&gt;)</i><i class="cq">■ código de la pregunta</i></div>
+    </div>
+    <div id="trace" role="log"></div>
+    <div class="tf">
+      <button class="btn alt" id="t-pausa" type="button">PAUSA</button>
+      <button class="btn alt" id="t-vel" type="button">VEL x1</button>
+      <button class="btn dim" id="t-limpiar" type="button">LIMPIAR</button>
+      <span class="cnt" id="t-cnt">0 líneas</span>
+    </div>
+  </aside>
+</main>
+
+<!-- =====================================================================
+     LÓGICA DEL JUEGO EN PYTHON (se ejecuta dentro del navegador con Pyodide)
+     JavaScript solo dibuja y reenvía las teclas; todas las reglas están aquí.
+     ===================================================================== -->
+<script type="text/x-python" id="game-py">
+# MISIÓN RESCATAR LA CUN - versión roguelike de salas
+# Reglas (igual que el juego de consola):
+# - 3 vidas al empezar, 5 salas, 3 preguntas (nodos) por sala.
+# - Acierto: +10 puntos. Acierto con pista: +7. Fallo: -1 vida.
+# - Sala sin fallar ninguna pregunta: +5 de bono.
+# - Los corazones del mapa devuelven 1 vida (hasta un máximo de 3).
+# - GANAS al pasar las 5 salas con vidas. PIERDES si llegas a 0 vidas.
+
+import io
+import json
+import random
+import sys
+from contextlib import redirect_stdout
+
+ANCHO = 15
+ALTO = 11
+VIDAS_INICIALES = 3
+TOTAL_SALAS = 5
+PREGUNTAS_POR_SALA = 3
+
+PUNTOS_ACIERTO = 10
+PUNTOS_ACIERTO_CON_PISTA = 7
+PUNTOS_BONO = 5
+PUNTOS_MAXIMOS = TOTAL_SALAS * (PREGUNTAS_POR_SALA * PUNTOS_ACIERTO + PUNTOS_BONO)
+
+DIRECCIONES = ((1, 0), (-1, 0), (0, 1), (0, -1))
+
+SALAS = [
+    {
+        "tema": "Variables y tipos de datos",
+        "historia": [
+            "La puerta del servidor está cerrada.",
+            "El panel pide que demuestres que conoces los tipos de datos.",
+        ],
+        "preguntas": [
+            {
+                "codigo": "x = 3.14",
+                "comprobar": "x = 3.14\nprint(type(x).__name__)",
+                "enunciado": "¿Qué tipo de dato es x? (int, float, str o bool)",
+                "pista": "Tiene punto decimal.",
+                "explicacion": "Los números con decimales son de tipo float.",
+            },
+            {
+                "codigo": "x = 5\ny = 2\nprint(x + y)",
+                "enunciado": "¿Qué imprime?",
+                "pista": "Son dos números, se suman.",
+                "explicacion": "Con números, el signo + suma: 5 + 2 = 7.",
+            },
+            {
+                "codigo": "nombre = \"Ana\"\nprint(nombre * 2)",
+                "enunciado": "¿Qué imprime? (sin espacios)",
+                "pista": "Multiplicar un texto lo repite.",
+                "explicacion": "El texto \"Ana\" se repite dos veces: AnaAna.",
+            },
+        ],
+    },
+    {
+        "tema": "Operadores matemáticos",
+        "historia": [
+            "Un pasillo lleno de cables.",
+            "Para avanzar debes calcular las claves con los operadores correctos.",
+        ],
+        "preguntas": [
+            {
+                "codigo": "print(10 // 3)",
+                "enunciado": "¿Qué imprime?",
+                "pista": "// es la división entera (sin decimales).",
+                "explicacion": "10 entre 3 es 3 y sobra 1. El // se queda con el 3.",
+            },
+            {
+                "codigo": "print(10 % 3)",
+                "enunciado": "¿Qué imprime?",
+                "pista": "% devuelve lo que sobra de la división.",
+                "explicacion": "El % es el residuo: 10 entre 3 sobra 1.",
+            },
+            {
+                "codigo": "print(2 ** 3)",
+                "enunciado": "¿Qué imprime?",
+                "pista": "** es la potencia.",
+                "explicacion": "2 ** 3 es 2 * 2 * 2 = 8.",
+            },
+        ],
+    },
+    {
+        "tema": "Condicionales",
+        "historia": [
+            "El virus bloquea las puertas con decisiones lógicas.",
+            "Si lees bien el if, podrás pasar.",
+        ],
+        "preguntas": [
+            {
+                "codigo": "x = 7\nif x > 5:\n    print(\"A\")\nelse:\n    print(\"B\")",
+                "enunciado": "¿Qué imprime? (A o B)",
+                "pista": "¿Es 7 mayor que 5?",
+                "explicacion": "7 > 5 es verdadero, por eso se ejecuta el if.",
+            },
+            {
+                "codigo": "print(5 > 3 and 2 > 4)",
+                "enunciado": "¿Qué imprime? (True o False)",
+                "pista": "El and necesita que las DOS condiciones sean verdaderas.",
+                "explicacion": "5 > 3 es True, pero 2 > 4 es False. Con and el resultado es False.",
+            },
+            {
+                "codigo": "nota = 70\nif nota >= 90:\n    print(\"A\")\nelif nota >= 60:\n    print(\"B\")\nelse:\n    print(\"C\")",
+                "enunciado": "¿Qué imprime? (A, B o C)",
+                "pista": "Python revisa las condiciones de arriba hacia abajo.",
+                "explicacion": "70 no es >= 90, pero sí es >= 60, por eso imprime B.",
+            },
+        ],
+    },
+    {
+        "tema": "Bucles",
+        "historia": [
+            "Un robot de seguridad repite sus rondas sin parar.",
+            "Debes entender sus bucles para engañarlo.",
+        ],
+        "preguntas": [
+            {
+                "codigo": "for i in range(4):\n    print(\"hola\")",
+                "modo": "lineas",
+                "enunciado": "¿Cuántas veces se imprime \"hola\"?",
+                "pista": "range(4) genera los números 0, 1, 2, 3.",
+                "explicacion": "range(4) da cuatro valores, por eso el bucle da 4 vueltas.",
+            },
+            {
+                "codigo": "suma = 0\nfor i in range(1, 4):\n    suma = suma + i\nprint(suma)",
+                "enunciado": "¿Qué imprime?",
+                "pista": "range(1, 4) genera los números 1, 2, 3.",
+                "explicacion": "Se suma 1 + 2 + 3 = 6.",
+            },
+            {
+                "codigo": "c = 0\nwhile c < 3:\n    c = c + 1\nprint(c)",
+                "enunciado": "¿Qué imprime?",
+                "pista": "El while se detiene cuando c deja de ser menor que 3.",
+                "explicacion": "c sube hasta 3. Entonces 3 < 3 es falso y el bucle termina.",
+            },
+        ],
+    },
+    {
+        "tema": "Listas y funciones",
+        "historia": [
+            "¡La sala del núcleo! BUG MAYOR custodia la salida.",
+            "Responde bien y restaurarás el servidor.",
+        ],
+        "preguntas": [
+            {
+                "codigo": "frutas = [\"pera\", \"uva\", \"kiwi\"]\nprint(frutas[1])",
+                "enunciado": "¿Qué imprime?",
+                "pista": "Las posiciones de una lista empiezan en 0.",
+                "explicacion": "La posición 0 es pera y la posición 1 es uva.",
+            },
+            {
+                "codigo": "nums = [1, 2]\nnums.append(3)\nprint(len(nums))",
+                "enunciado": "¿Qué imprime?",
+                "pista": "append agrega un elemento al final de la lista.",
+                "explicacion": "La lista queda [1, 2, 3] y len cuenta 3 elementos.",
+            },
+            {
+                "codigo": "def doble(n):\n    return n * 2\n\nprint(doble(4))",
+                "enunciado": "¿Qué imprime?",
+                "pista": "La función multiplica por 2 el valor que recibe.",
+                "explicacion": "doble(4) devuelve 4 * 2 = 8.",
+            },
+        ],
+    },
+]
+
+# Estado de la partida (todo vive en este diccionario)
+J = {
+    "fase": "titulo",   # titulo, mapa, pregunta, resultado, fin
+    "nombre": "Programador",
+    "vidas": VIDAS_INICIALES,
+    "puntos": 0,
+    "sala": 0,
+    "uid": 0,
+    "mensajes": [],
+    "aviso": "",
+    "resultado": None,
+    "fin": None,
+    "eventos": [],      # cosas que pasaron en esta acción (golpes) para que JavaScript las anime
+}
+
+
+# ---------------------------------------------------------------- mensajes
+def mensaje(tipo, texto):
+    J["mensajes"].append([tipo, texto])
+    del J["mensajes"][:-30]
+
+
+# ---------------------------------------------------------------- partida
+def nueva_partida(nombre):
+    nombre = nombre.strip()
+    if nombre == "":
+        nombre = "Programador"
+    J["nombre"] = nombre
+    J["vidas"] = VIDAS_INICIALES
+    J["puntos"] = 0
+    J["mensajes"] = []
+    J["resultado"] = None
+    J["fin"] = None
+    J["azar"] = random.Random()
+    mensaje("sala", "Año 2045. BUG MAYOR dañó el servidor de la CUN.")
+    mensaje("info", nombre + ", eres el único que puede entrar.")
+    entrar_sala(1)
+
+
+def entrar_sala(numero):
+    J["sala"] = numero
+    J["perdio_vida"] = False
+    J["pistas"] = {}
+    J["aviso"] = ""
+    J["fase"] = "mapa"
+    generar_sala(numero)
+    datos = SALAS[numero - 1]
+    mensaje("sala", f"SALA {numero}: {datos['tema']}")
+    for linea in datos["historia"]:
+        mensaje("info", linea)
+
+
+# ---------------------------------------------------------------- mapa
+def distancia(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+
+def crear_muros(numero, azar):
+    muros = set()
+    for x in range(ANCHO):
+        muros.add((x, 0))
+        muros.add((x, ALTO - 1))
+    for y in range(ALTO):
+        muros.add((0, y))
+        muros.add((ANCHO - 1, y))
+    # columnas y bloques al azar; hay más obstáculos en cada sala
+    for _ in range(6 + numero * 2):
+        x = azar.randint(3, ANCHO - 4)
+        y = azar.randint(2, ALTO - 3)
+        muros.add((x, y))
+        if azar.random() < 0.5:
+            muros.add((x + azar.choice([-1, 1]), y))
+        else:
+            muros.add((x, y + azar.choice([-1, 1])))
+    return muros
+
+
+def alcanzables(inicio, bloqueadas):
+    visitadas = {inicio}
+    pendientes = [inicio]
+    while pendientes:
+        x, y = pendientes.pop()
+        for dx, dy in DIRECCIONES:
+            vecina = (x + dx, y + dy)
+            if vecina not in visitadas and vecina not in bloqueadas:
+                visitadas.add(vecina)
+                pendientes.append(vecina)
+    return visitadas
+
+
+def tiene_vecino(celda, conjunto):
+    for dx, dy in DIRECCIONES:
+        if (celda[0] + dx, celda[1] + dy) in conjunto:
+            return True
+    return False
+
+
+def separados(celdas):
+    for i in range(len(celdas)):
+        for j in range(i + 1, len(celdas)):
+            if distancia(celdas[i], celdas[j]) < 4:
+                return False
+    return True
+
+
+def generar_sala(numero):
+    azar = J["azar"]
+    while True:
+        muros = crear_muros(numero, azar)
+        inicio = (1, azar.randint(2, ALTO - 3))
+        fila_puerta = azar.randint(2, ALTO - 3)
+        puerta = (ANCHO - 1, fila_puerta)
+        frente = (ANCHO - 2, fila_puerta)
+        muros.discard(inicio)
+        muros.discard(frente)
+
+        libres = []
+        for x in range(3, ANCHO - 2):
+            for y in range(1, ALTO - 1):
+                if (x, y) not in muros:
+                    libres.append((x, y))
+        if len(libres) < 12:
+            continue
+
+        celdas = azar.sample(libres, PREGUNTAS_POR_SALA)
+        if not separados(celdas):
+            continue
+
+        # La sala solo vale si se puede llegar a todos los nodos y a la puerta
+        alcance = alcanzables(inicio, muros | set(celdas))
+        if frente not in alcance:
+            continue
+        if not all(tiene_vecino(c, alcance) for c in celdas):
+            continue
+        break
+
+    candidatas = []
+    for c in libres:
+        if c in alcance and c not in celdas and distancia(c, inicio) > 3:
+            candidatas.append(c)
+    cantidad = min(len(candidatas), 1 + (numero + 1) // 2)
+
+    J["uid"] += 1
+    J["muros"] = muros
+    J["jugador"] = inicio
+    J["direccion"] = 1
+    J["puerta"] = puerta
+    J["puerta_abierta"] = False
+    J["terminales"] = [{"x": c[0], "y": c[1], "hecha": False, "acierto": False} for c in celdas]
+    J["bugs"] = azar.sample(candidatas, cantidad)
+
+    # Corazones para recuperar vidas: 1 por sala (2 en las salas 4 y 5)
+    sitios = [c for c in candidatas if c not in J["bugs"]]
+    cuantos = min(len(sitios), 1 + (1 if numero >= 4 else 0))
+    J["corazones"] = azar.sample(sitios, cuantos)
+
+
+def mover_bugs():
+    azar = J["azar"]
+    ocupadas = set(J["muros"])
+    ocupadas.add(J["puerta"])
+    ocupadas.add(J["jugador"])
+    for t in J["terminales"]:
+        ocupadas.add((t["x"], t["y"]))
+    ocupadas.update(J["corazones"])
+    ocupadas.update(J["bugs"])
+    for i in range(len(J["bugs"])):
+        if azar.random() < 0.6:
+            x, y = J["bugs"][i]
+            dx, dy = azar.choice(DIRECCIONES)
+            nuevo = (x + dx, y + dy)
+            if nuevo not in ocupadas:
+                ocupadas.discard((x, y))
+                ocupadas.add(nuevo)
+                J["bugs"][i] = nuevo
+
+
+def buscar_terminal(celda):
+    for i in range(len(J["terminales"])):
+        t = J["terminales"][i]
+        if (t["x"], t["y"]) == celda:
+            return i
+    return None
+
+
+def faltantes():
+    n = 0
+    for t in J["terminales"]:
+        if not t["hecha"]:
+            n += 1
+    return n
+
+
+def mover(dx, dy):
+    if J["fase"] != "mapa":
+        return
+    x, y = J["jugador"]
+    destino = (x + dx, y + dy)
+    if dx != 0:
+        J["direccion"] = dx
+
+    if destino == J["puerta"]:
+        usar_puerta()
+        return
+    if destino in J["muros"]:
+        return
+    indice = buscar_terminal(destino)
+    if indice is not None:
+        tocar_terminal(indice)
+        return
+    if destino in J["bugs"]:
+        J["bugs"].remove(destino)
+        J["eventos"].append({"tipo": "golpe", "x": destino[0], "y": destino[1], "dx": dx, "dy": dy})
+        mensaje("info", "¡Aplastaste un bug! (no da puntos)")
+    else:
+        J["jugador"] = destino
+        if destino in J["corazones"]:
+            recoger_corazon(destino)
+    mover_bugs()
+
+
+def recoger_corazon(celda):
+    # Solo se recoge si falta alguna vida; si no, el corazón se queda para después
+    if J["vidas"] < VIDAS_INICIALES:
+        J["corazones"].remove(celda)
+        J["vidas"] += 1
+        J["eventos"].append({"tipo": "vida", "x": celda[0], "y": celda[1]})
+        mensaje("ok", f"¡Corazón! Recuperas 1 vida ({J['vidas']}/{VIDAS_INICIALES}).")
+    else:
+        mensaje("info", "Ya tienes todas las vidas. El corazón te espera para después.")
+
+
+def usar_puerta():
+    if J["puerta_abierta"]:
+        if J["sala"] == TOTAL_SALAS:
+            terminar_partida()
+        else:
+            entrar_sala(J["sala"] + 1)
+    else:
+        n = faltantes()
+        mensaje("mal", f"Puerta bloqueada: faltan {n} nodo(s) por resolver.")
+
+
+# ---------------------------------------------------------------- preguntas
+def tocar_terminal(indice):
+    if J["terminales"][indice]["hecha"]:
+        mensaje("info", f"El nodo {indice + 1} ya está resuelto.")
+        return
+    J["fase"] = "pregunta"
+    J["actual"] = indice
+    J["aviso"] = ""
+    mensaje("info", f"Te conectas al nodo {indice + 1}...")
+
+
+def pregunta_actual():
+    return SALAS[J["sala"] - 1]["preguntas"][J["actual"]]
+
+
+def ejecutar_codigo(codigo):
+    # Ejecuta de verdad el código de la pregunta y captura lo que imprime
+    J["lineas_q"] = codigo.splitlines()
+    salida = io.StringIO()
+    with redirect_stdout(salida):
+        exec(compile(codigo, "<pregunta>", "exec"), {})
+    texto = salida.getvalue().strip()
+    for linea in texto.splitlines()[:6]:
+        anotar("q", "out", 0, linea)
+    return texto
+
+
+def calcular_respuesta(p):
+    codigo = p.get("comprobar", p["codigo"])
+    salida = ejecutar_codigo(codigo)
+    if p.get("modo") == "lineas":
+        return str(len(salida.splitlines()))
+    return salida.lower()
+
+
+def responder(texto):
+    if J["fase"] != "pregunta":
+        return
+    respuesta = texto.strip().strip("\"'").lower()
+    J["aviso"] = ""
+    if respuesta == "pista":
+        pedir_pista()
+    elif respuesta == "":
+        J["aviso"] = "Escribe una respuesta."
+    else:
+        evaluar(respuesta)
+
+
+def pedir_pista():
+    if J["fase"] != "pregunta":
+        return
+    if J["pistas"].get(J["actual"], False):
+        J["aviso"] = "Ya usaste la pista de esta pregunta."
+    else:
+        J["pistas"][J["actual"]] = True
+        J["aviso"] = ""
+
+
+def evaluar(respuesta):
+    p = pregunta_actual()
+    indice = J["actual"]
+    correcta = calcular_respuesta(p)
+    uso_pista = J["pistas"].get(indice, False)
+    terminal = J["terminales"][indice]
+    terminal["hecha"] = True
+
+    resultado = {
+        "numero": indice + 1,
+        "dada": respuesta,
+        "esperada": correcta,
+        "explicacion": p["explicacion"],
+        "extra": [],
+    }
+
+    if respuesta == correcta:
+        terminal["acierto"] = True
+        if uso_pista:
+            ganados = PUNTOS_ACIERTO_CON_PISTA
+        else:
+            ganados = PUNTOS_ACIERTO
+        J["puntos"] += ganados
+        resultado["correcto"] = True
+        resultado["puntos"] = ganados
+        mensaje("ok", f"Nodo {indice + 1} resuelto: +{ganados} puntos.")
+    else:
+        J["vidas"] -= 1
+        J["perdio_vida"] = True
+        resultado["correcto"] = False
+        resultado["puntos"] = 0
+        mensaje("mal", f"Nodo {indice + 1}: respuesta incorrecta. Pierdes 1 vida.")
+
+    J["fase"] = "resultado"
+    J["resultado"] = resultado
+    if J["vidas"] > 0 and faltantes() == 0:
+        completar_sala(resultado)
+
+
+def completar_sala(resultado):
+    # Da el bono si no se falló ninguna pregunta en la sala (aunque se recupere vida) y abre la puerta
+    if not J["perdio_vida"]:
+        J["puntos"] += PUNTOS_BONO
+        resultado["extra"].append(f"Sala perfecta: +{PUNTOS_BONO} puntos de bono.")
+        mensaje("ok", f"Sala perfecta: +{PUNTOS_BONO} puntos de bono.")
+    J["puerta_abierta"] = True
+    if J["sala"] == TOTAL_SALAS:
+        resultado["extra"].append("¡BUG MAYOR se desploma! La salida está libre.")
+        mensaje("sala", "¡BUG MAYOR cae! Cruza la puerta del núcleo.")
+    else:
+        resultado["extra"].append("¡La puerta se abre!")
+        mensaje("sala", "¡La puerta se abre!")
+
+
+def continuar():
+    if J["fase"] != "resultado":
+        return
+    if J["vidas"] <= 0:
+        terminar_partida()
+    else:
+        J["fase"] = "mapa"
+
+
+def cerrar_pregunta():
+    if J["fase"] == "pregunta":
+        J["fase"] = "mapa"
+        J["aviso"] = ""
+
+
+# ---------------------------------------------------------------- final
+def calcular_nivel():
+    if J["puntos"] >= 150:
+        return "Experto"
+    elif J["puntos"] >= 100:
+        return "Intermedio"
+    else:
+        return "Aprendiz"
+
+
+def terminar_partida():
+    J["fase"] = "fin"
+    victoria = J["vidas"] > 0
+    if victoria:
+        lineas = [
+            "¡VICTORIA! Has eliminado a BUG MAYOR.",
+            "La CUN vuelve a tener luz, agua y tránsito.",
+            J["nombre"] + ", la ciudad te lo agradece.",
+        ]
+    else:
+        lineas = [
+            "DERROTA. Te quedaste sin vidas.",
+            "BUG MAYOR sigue dentro del servidor...",
+            "Repasa los temas e inténtalo de nuevo.",
+        ]
+    J["fin"] = {
+        "victoria": victoria,
+        "lineas": lineas,
+        "puntos": J["puntos"],
+        "maximo": PUNTOS_MAXIMOS,
+        "nivel": calcular_nivel(),
+    }
+
+
+# ---------------------------------------------------------------- estado hacia JavaScript
+def estado():
+    e = {
+        "fase": J["fase"],
+        "nombre": J["nombre"],
+        "vidas": J["vidas"],
+        "vidas_max": VIDAS_INICIALES,
+        "puntos": J["puntos"],
+        "maximo": PUNTOS_MAXIMOS,
+        "sala": J["sala"],
+        "total_salas": TOTAL_SALAS,
+        "mensajes": J["mensajes"][-7:],
+        "aviso": J["aviso"],
+        "resultado": J["resultado"],
+        "fin": J["fin"],
+        "nivel": calcular_nivel(),
+        "eventos": J["eventos"],
+    }
+    if J["sala"] > 0:
+        e["tema"] = SALAS[J["sala"] - 1]["tema"]
+        e["mapa"] = {"ancho": ANCHO, "alto": ALTO, "uid": J["uid"], "muros": sorted(J["muros"])}
+        e["jugador"] = J["jugador"]
+        e["direccion"] = J["direccion"]
+        e["puerta"] = {"x": J["puerta"][0], "y": J["puerta"][1], "abierta": J["puerta_abierta"]}
+        e["jefe"] = J["sala"] == TOTAL_SALAS and not J["puerta_abierta"]
+        e["terminales"] = J["terminales"]
+        e["bugs"] = J["bugs"]
+        e["corazones"] = J["corazones"]
+    if J["fase"] in ("pregunta", "resultado"):
+        p = pregunta_actual()
+        usada = J["pistas"].get(J["actual"], False)
+        e["pregunta"] = {
+            "numero": J["actual"] + 1,
+            "total": PREGUNTAS_POR_SALA,
+            "codigo": p["codigo"],
+            "enunciado": p["enunciado"],
+            "pista_usada": usada,
+            "pista": p["pista"] if usada else "",
+        }
+    return e
+
+
+# ---------------------------------------------------------------- traza (lo que ve el panel derecho)
+TRAZA = []
+LLAMADAS = {}
+CONTADORES = {}
+MAX_TRAZA = 280
+MAX_LLAMADAS = 4
+REPETIR = 4
+SILENCIO = {"anotar", "tracer", "estado", "api", "mensaje", "distancia", "consultar",
+            "descripcion_llamada", "tiene_vecino", "separados"}
+LINEAS = SRC_JUEGO.splitlines()
+
+
+def anotar(origen, tipo, numero, texto):
+    if len(TRAZA) >= MAX_TRAZA:
+        if TRAZA[-1][1] != "rep":
+            TRAZA.append(["j", "rep", 0, "... traza recortada"])
+        return
+    if len(texto) > 110:
+        texto = texto[:109] + "…"
+    TRAZA.append([origen, tipo, numero, texto])
+
+
+def descripcion_llamada(frame):
+    c = frame.f_code
+    valores = []
+    for nombre in c.co_varnames[:c.co_argcount]:
+        valor = repr(frame.f_locals.get(nombre))
+        if len(valor) > 22:
+            valor = valor[:21] + "…"
+        valores.append(valor)
+    return c.co_name + "(" + ", ".join(valores) + ")"
+
+
+def tracer(frame, evento, arg):
+    c = frame.f_code
+    if c.co_filename == "<juego>":
+        origen, fuente = "j", LINEAS
+    elif c.co_filename == "<pregunta>":
+        origen, fuente = "q", J["lineas_q"]
+    else:
+        return None
+    nombre = c.co_name
+    if nombre in SILENCIO:
+        return None
+
+    if evento == "call":
+        veces = LLAMADAS.get(nombre, 0) + 1
+        LLAMADAS[nombre] = veces
+        if veces > MAX_LLAMADAS:
+            return None
+        CONTADORES[id(frame)] = {}
+        if nombre != "<module>":
+            anotar(origen, "call", c.co_firstlineno, descripcion_llamada(frame))
+        return tracer
+
+    if evento == "line":
+        cont = CONTADORES.setdefault(id(frame), {})
+        n = cont.get(frame.f_lineno, 0) + 1
+        cont[frame.f_lineno] = n
+        if n <= REPETIR and 0 < frame.f_lineno <= len(fuente):
+            anotar(origen, "line", frame.f_lineno, fuente[frame.f_lineno - 1].rstrip())
+
+    elif evento == "return":
+        cont = CONTADORES.pop(id(frame), {})
+        extra = 0
+        for n in cont.values():
+            if n > REPETIR:
+                extra += n - REPETIR
+        if extra > 0:
+            anotar(origen, "rep", 0, f"... {extra} ejecuciones más de líneas repetidas")
+        if arg is not None and nombre != "<module>":
+            anotar(origen, "ret", frame.f_lineno, repr(arg))
+    return tracer
+
+
+def consultar():
+    pass
+
+
+ACCIONES = {
+    "consultar": consultar,
+    "nueva_partida": nueva_partida,
+    "mover": mover,
+    "responder": responder,
+    "pista": pedir_pista,
+    "continuar": continuar,
+    "cerrar": cerrar_pregunta,
+}
+
+
+def api(accion, *args):
+    # Punto de entrada desde JavaScript: ejecuta la acción con la traza activada
+    del TRAZA[:]
+    J["eventos"] = []
+    LLAMADAS.clear()
+    CONTADORES.clear()
+    sys.settrace(tracer)
+    try:
+        ACCIONES[accion](*args)
+    except Exception as error:
+        TRAZA.append(["j", "err", 0, repr(error)])
+    finally:
+        sys.settrace(None)
+    for nombre, veces in LLAMADAS.items():
+        if veces > MAX_LLAMADAS:
+            TRAZA.append(["j", "rep", 0, f"... {nombre}() se llamó {veces - MAX_LLAMADAS} veces más"])
+    return json.dumps({"estado": estado(), "traza": TRAZA})
+</script>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+(() => {
+'use strict';
+
+const T = 16;                               // tamaño de casilla en el lienzo interno
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* ===================================================== sprites 8x8 */
+function sprite(rows, pal) {
+  const c = document.createElement('canvas');
+  c.width = 8; c.height = 8;
+  const g = c.getContext('2d');
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (pal[ch]) { g.fillStyle = pal[ch]; g.fillRect(x, y, 1, 1); }
+  }));
+  return c;
+}
+const SPR = {
+  player: sprite([
+    '..cccc..', '.cccccc.', '.ffffff.', '.fkffkf.', '.ffffff.', 'fbbbbbbf', '.bbwwbb.', '..l..l..',
+  ], { c: '#ef7d57', f: '#ffd4a8', k: '#1a1c2c', b: '#a7f070', w: '#f4f4f4', l: '#333c57' }),
+  bug: sprite([
+    'r..rr..r', '.r.rr.r.', '..rrrr..', '.rerrer.', 'rrrrrrrr', '.rrrrrr.', 'r.r..r.r', 'r......r',
+  ], { r: '#e8475f', e: '#f4f4f4' }),
+  boss: sprite([
+    'm......m', 'mm.mm.mm', 'mmmmmmmm', 'mymmmmym', 'mmmmmmmm', 'mmwmwmwm', '.mmmmmm.', '..m..m..',
+  ], { m: '#d62e8a', y: '#ffcd75', w: '#f4f4f4' }),
+  termPend: sprite([
+    'gggggggg', 'gddddddg', 'gdaaaadg', 'gdaaaadg', 'gdaaaadg', 'gddddddg', '.gggggg.', 'gggggggg',
+  ], { g: '#94b0c2', d: '#1a1c2c', a: '#29366f' }),
+  termDone: sprite([
+    'gggggggg', 'gddddddg', 'gdaaasdg', 'gdsasadg', 'gdasaadg', 'gddddddg', '.gggggg.', 'gggggggg',
+  ], { g: '#94b0c2', d: '#1a1c2c', a: '#1d7f43', s: '#a7f070' }),
+  termFail: sprite([
+    'gggggggg', 'gddddddg', 'gdsaasdg', 'gdasasdg', 'gdsaasdg', 'gddddddg', '.gggggg.', 'gggggggg',
+  ], { g: '#94b0c2', d: '#1a1c2c', a: '#5d1f35', s: '#e8475f' }),
+  doorShut: sprite([
+    'dddddddd', 'dbbbbbbd', 'dbbbbbbd', 'dbbyybbd', 'dbbyybbd', 'dbbbbbbd', 'dbbbbbbd', 'dddddddd',
+  ], { d: '#5d275d', b: '#b13e53', y: '#ffcd75' }),
+  doorOpen: sprite([
+    'gggggggg', 'g000000g', 'g000000g', 'g000e00g', 'g00eee0g', 'g000e00g', 'g000000g', 'gggggggg',
+  ], { g: '#38b764', '0': '#05060d', e: '#a7f070' }),
+  bugWhite: sprite([
+    'r..rr..r', '.r.rr.r.', '..rrrr..', '.rrrrrr.', 'rrrrrrrr', '.rrrrrr.', 'r.r..r.r', 'r......r',
+  ], { r: '#f4f4f4' }),
+  heart: sprite([
+    '........', '.rr..rr.', 'rwrrrrrr', 'rrrrrrrr', 'rrrrrrrr', '.rrrrrr.', '..rrrr..', '...rr...',
+  ], { r: '#ef476f', w: '#ffd4de' }),
+  heartOff: sprite([
+    '........', '.rr..rr.', 'rrrrrrrr', 'rrrrrrrr', 'rrrrrrrr', '.rrrrrr.', '..rrrr..', '...rr...',
+  ], { r: '#333c57' }),
+};
+const url = (c) => c.toDataURL();
+$('#logo').src = url(SPR.boss);
+$('#logo2').src = url(SPR.boss);
+
+/* temas de color por sala */
+const THEMES = [
+  { f1: '#1b2145', f2: '#1f2650', spk: '#2c3a78', wall: '#3b5dc9', mortar: '#29366f', light: '#41a6f6' },
+  { f1: '#12301f', f2: '#163a25', spk: '#1f5a3a', wall: '#257179', mortar: '#134c4c', light: '#38b764' },
+  { f1: '#241636', f2: '#2a1a40', spk: '#47245f', wall: '#7b4a9e', mortar: '#41214f', light: '#a56dc6' },
+  { f1: '#3a2418', f2: '#432a1b', spk: '#6a4026', wall: '#b2603a', mortar: '#6e3a24', light: '#ef7d57' },
+  { f1: '#2f1424', f2: '#381829', spk: '#5d275d', wall: '#b13e53', mortar: '#5d1f35', light: '#ef7d57' },
+];
+
+function drawWall(g, px, py, th) {
+  g.fillStyle = th.wall; g.fillRect(px, py, T, T);
+  g.fillStyle = th.light; g.fillRect(px, py + 1, T, 1);
+  g.fillStyle = th.mortar;
+  g.fillRect(px, py, T, 1); g.fillRect(px, py + 8, T, 1);
+  g.fillRect(px + 8, py, 1, 8); g.fillRect(px, py + 9, 1, 7);
+  g.fillRect(px, py + 15, T, 1);
+  g.fillStyle = th.light; g.fillRect(px, py + 9, T, 1);
+}
+function drawFloor(g, x, y, th) {
+  g.fillStyle = (x + y) % 2 ? th.f1 : th.f2;
+  g.fillRect(x * T, y * T, T, T);
+  const h = ((x * 73856093) ^ (y * 19349663)) >>> 0;
+  g.fillStyle = th.spk;
+  if (h % 3 === 0) g.fillRect(x * T + 2 + (h >> 3) % 11, y * T + 2 + (h >> 7) % 11, 2, 1);
+  if (h % 4 === 0) g.fillRect(x * T + 2 + (h >> 5) % 11, y * T + 2 + (h >> 9) % 11, 1, 1);
+}
+function buildBackground(s) {
+  const th = THEMES[(s.sala - 1) % THEMES.length];
+  const c = document.createElement('canvas');
+  c.width = s.mapa.ancho * T; c.height = s.mapa.alto * T;
+  const g = c.getContext('2d');
+  const muros = new Set(s.mapa.muros.map((m) => m[0] + ',' + m[1]));
+  for (let y = 0; y < s.mapa.alto; y++) {
+    for (let x = 0; x < s.mapa.ancho; x++) {
+      if (muros.has(x + ',' + y)) drawWall(g, x * T, y * T, th); else drawFloor(g, x, y, th);
+    }
+  }
+  return c;
+}
+
+/* ===================================================== estado de la app */
+let apiFn = null, S = null, bg = null, bgUid = -1, lastBannerSala = 0;
+const cv = $('#cv'), ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+function call(accion, ...args) {
+  if (!apiFn) return;
+  const r = JSON.parse(apiFn(accion, ...args));
+  const prev = S;
+  S = r.estado;
+  if (accion !== 'consultar') enqueueTrace(accion, args, r.traza);
+  onState(prev, S);
+}
+
+/* ===================================================== efectos de golpe */
+// Python avisa con un evento "golpe"; aquí solo se anima: embestida, destello y explosión de píxeles
+const hits = [];
+let lunge = null;
+const SPARK = ['#f4f4f4', '#ffcd75', '#ef7d57', '#e8475f', '#e8475f'];
+function addHit(ev) {
+  const t0 = performance.now();
+  lunge = { dx: ev.dx, dy: ev.dy, t0 };
+  const parts = [];
+  for (let i = 0; i < 16; i++) {
+    parts.push({ a: Math.random() * Math.PI * 2, s: 35 + Math.random() * 80, c: SPARK[i % SPARK.length], z: Math.random() < .4 ? 2 : 1 });
+  }
+  hits.push({ x: ev.x, y: ev.y, t0, parts });
+  cv.classList.remove('tap'); void cv.offsetWidth; cv.classList.add('tap');
+}
+function drawHits(t) {
+  for (let i = hits.length - 1; i >= 0; i--) {
+    const h = hits[i], e = t - h.t0;
+    if (e > 800) { hits.splice(i, 1); continue; }
+    const bx = h.x * T, by = h.y * T;
+    // bug aturdido: parpadea blanco, tiembla y se aplasta
+    if (e < 150) {
+      const sq = 1 - .35 * (e / 150), shake = Math.round(Math.sin(e / 18) * 2);
+      ctx.drawImage(Math.floor(e / 50) % 2 ? SPR.bug : SPR.bugWhite, bx + shake, by + Math.round(T * (1 - sq)), T, Math.round(T * sq));
+    }
+    // tajo diagonal
+    if (e < 140) {
+      const len = Math.ceil(11 * Math.min(1, e / 60));
+      for (let n = 0; n < 3; n++) {
+        ctx.fillStyle = n === 1 ? '#ffcd75' : '#f4f4f4';
+        for (let j = 0; j < len; j++) ctx.fillRect(bx + j + n * 3 - 1, by + 2 + j, 1, 1);
+      }
+    }
+    // explosión: anillo de chispas, partículas con gravedad y texto flotante
+    if (e >= 110) {
+      const dt = (e - 110) / 1000, cx = bx + 8, cy = by + 8;
+      if (dt < .25) {
+        const r = 3 + dt * 60;
+        ctx.fillStyle = '#ffcd75';
+        for (let k = 0; k < 8; k++) ctx.fillRect(Math.round(cx + Math.cos(k * Math.PI / 4) * r) - 1, Math.round(cy + Math.sin(k * Math.PI / 4) * r) - 1, 2, 2);
+      }
+      h.parts.forEach((p) => {
+        ctx.globalAlpha = Math.max(0, 1 - dt / .68);
+        ctx.fillStyle = p.c;
+        ctx.fillRect(Math.round(cx + Math.cos(p.a) * p.s * dt), Math.round(cy + Math.sin(p.a) * p.s * dt + 130 * dt * dt), p.z, p.z);
+      });
+      ctx.globalAlpha = Math.max(0, 1 - dt / .6);
+      ctx.font = '6px "Press Start 2P", monospace'; ctx.textBaseline = 'alphabetic';
+      const tx = Math.max(2, Math.min(cv.width - 40, bx - 12)), ty = Math.max(8, Math.round(by - 2 - dt * 22));
+      ctx.fillStyle = '#5d275d'; ctx.fillText('SPLAT!', tx + 1, ty + 1);
+      ctx.fillStyle = '#ffcd75'; ctx.fillText('SPLAT!', tx, ty);
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+// Corazón recogido: un corazón sube, chispas verdes y rosas, y "+1 VIDA"
+const heals = [];
+const HEAL_C = ['#a7f070', '#f4f4f4', '#ff6fae', '#ffcd75'];
+function addHeal(ev) {
+  const parts = [];
+  for (let i = 0; i < 12; i++) parts.push({ a: -Math.PI / 2 + (Math.random() - .5) * 2.4, s: 25 + Math.random() * 45, c: HEAL_C[i % HEAL_C.length] });
+  heals.push({ x: ev.x, y: ev.y, t0: performance.now(), parts });
+}
+function drawHeals(t) {
+  for (let i = heals.length - 1; i >= 0; i--) {
+    const h = heals[i], e = t - h.t0;
+    if (e > 1000) { heals.splice(i, 1); continue; }
+    const k = e / 1000, cx = h.x * T + 8, cy = h.y * T + 8;
+    ctx.globalAlpha = Math.max(0, 1 - Math.max(0, k - .45) / .55);
+    ctx.drawImage(SPR.heart, h.x * T, Math.round(h.y * T - 4 - k * 22), T, T);
+    h.parts.forEach((p) => {
+      ctx.fillStyle = p.c;
+      ctx.fillRect(Math.round(cx + Math.cos(p.a) * p.s * k), Math.round(cy + Math.sin(p.a) * p.s * k), 2, 2);
+    });
+    ctx.font = '6px "Press Start 2P", monospace'; ctx.textBaseline = 'alphabetic';
+    const tx = Math.max(2, Math.min(cv.width - 46, h.x * T - 14)), ty = Math.max(8, Math.round(h.y * T - 6 - k * 26));
+    ctx.fillStyle = '#134c4c'; ctx.fillText('+1 VIDA', tx + 1, ty + 1);
+    ctx.fillStyle = '#a7f070'; ctx.fillText('+1 VIDA', tx, ty);
+    ctx.globalAlpha = 1;
+  }
+}
+
+/* ===================================================== dibujo */
+function frame(t) {
+  requestAnimationFrame(frame);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  if (!S || !S.mapa || !bg) return;
+  ctx.drawImage(bg, 0, 0);
+
+  const blink = Math.floor(t / 450) % 2;
+  const bob = Math.floor(t / 380) % 2;
+
+  // puerta
+  const d = S.puerta;
+  ctx.drawImage(S.puerta.abierta ? SPR.doorOpen : SPR.doorShut, d.x * T, d.y * T, T, T);
+  if (S.puerta.abierta) {
+    ctx.fillStyle = blink ? 'rgba(167,240,112,.25)' : 'rgba(167,240,112,.1)';
+    ctx.fillRect((d.x - 1) * T, d.y * T, T, T);
+  }
+  if (S.jefe) {
+    const wob = Math.floor(t / 220) % 2;
+    ctx.drawImage(SPR.boss, d.x * T, d.y * T - 1 + wob, T, T);
+  }
+
+  // nodos
+  const [px, py] = S.jugador;
+  S.terminales.forEach((n, i) => {
+    const near = Math.abs(n.x - px) + Math.abs(n.y - py) === 1;
+    const spr = n.hecha ? (n.acierto ? SPR.termDone : SPR.termFail) : SPR.termPend;
+    ctx.drawImage(spr, n.x * T, n.y * T, T, T);
+    if (!n.hecha) {
+      ctx.fillStyle = blink ? '#73eff7' : '#f4f4f4';
+      ctx.font = '7px "Press Start 2P", monospace';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(String(i + 1), n.x * T + 5, n.y * T + 11);
+      if (near) {
+        ctx.fillStyle = '#ffcd75';
+        ctx.fillRect(n.x * T + 7, n.y * T - 6 - bob, 2, 4);
+        ctx.fillRect(n.x * T + 7, n.y * T - 1 - bob, 2, 2);
+      }
+    }
+  });
+
+  // corazones (recuperan una vida)
+  S.corazones.forEach((c, i) => {
+    const o = Math.floor(t / 320 + i) % 2;
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(c[0] * T + 4, c[1] * T + 14, 8, 2);
+    ctx.drawImage(SPR.heart, c[0] * T, c[1] * T - 1 - o, T, T);
+    if (Math.floor(t / 260 + i * 3) % 4 === 0) { ctx.fillStyle = '#f4f4f4'; ctx.fillRect(c[0] * T + 11, c[1] * T + 2 - o, 1, 3); ctx.fillRect(c[0] * T + 10, c[1] * T + 3 - o, 3, 1); }
+  });
+
+  // bugs
+  S.bugs.forEach((b, i) => {
+    const o = Math.floor(t / 300 + i) % 2;
+    ctx.drawImage(SPR.bug, b[0] * T, b[1] * T + o, T, T);
+  });
+
+  // jugador
+  ctx.fillStyle = 'rgba(0,0,0,.38)';
+  ctx.fillRect(px * T + 3, py * T + 14, 10, 2);
+  let ox = 0, oy = 0;
+  if (lunge && t - lunge.t0 < 180) {
+    const o = Math.round(Math.sin(Math.PI * (t - lunge.t0) / 180) * 5);
+    ox = lunge.dx * o; oy = lunge.dy * o;
+  }
+  ctx.save();
+  if (S.direccion < 0) { ctx.translate((px + 1) * T + ox, 0); ctx.scale(-1, 1); ctx.drawImage(SPR.player, 0, py * T - bob + oy, T, T); }
+  else ctx.drawImage(SPR.player, px * T + ox, py * T - bob + oy, T, T);
+  ctx.restore();
+  drawHits(t);
+  drawHeals(t);
+}
+requestAnimationFrame(frame);
+
+/* ===================================================== resaltado de sintaxis */
+const KW = 'def|return|if|elif|else|for|while|in|not|and|or|import|from|as|global|True|False|None|break|continue|pass|is|with';
+const BI = 'print|range|len|type|input|int|str|float|bool|list|append|strip|lower|sum';
+const HL = new RegExp(`(#.*$)|("(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*')|\\b(${KW})\\b|\\b(${BI})\\b|\\b(\\d+(?:\\.\\d+)?)\\b`, 'g');
+function hl(code) {
+  let out = '', last = 0, m;
+  HL.lastIndex = 0;
+  while ((m = HL.exec(code))) {
+    out += esc(code.slice(last, m.index));
+    const cls = m[1] ? 'tc' : m[2] ? 'ts' : m[3] ? 'tk' : m[4] ? 'tb' : 'tn';
+    out += `<span class="${cls}">${esc(m[0])}</span>`;
+    last = HL.lastIndex;
+  }
+  return out + esc(code.slice(last));
+}
+
+/* ===================================================== panel de traza */
+const trEl = $('#trace');
+const queue = [];
+let timer = null, paused = false, speedIdx = 1, total = 0, lastRow = null;
+const SPEEDS = [0.5, 1, 2, 4];
+
+function enqueueTrace(accion, args, eventos) {
+  const argTxt = args.map((a) => typeof a === 'string' ? JSON.stringify(a) : a).join(', ');
+  queue.push(['c', 'cmd', '>>>', `api("${accion}"${argTxt !== '' ? ', ' + argTxt : ''})`]);
+  eventos.forEach((e) => queue.push(e));
+  kick();
+}
+function kick() { if (!timer && !paused && queue.length) timer = setTimeout(drain, 10); }
+function drain() {
+  timer = null;
+  if (paused || !queue.length) return;
+  const n = queue.length > 200 ? 5 : queue.length > 90 ? 3 : queue.length > 40 ? 2 : 1;
+  for (let i = 0; i < n && queue.length; i++) addRow(queue.shift());
+  timer = setTimeout(drain, 30 / SPEEDS[speedIdx]);
+}
+function addRow(ev) {
+  const [o, k, n, txt] = ev;
+  const stick = trEl.scrollTop + trEl.clientHeight >= trEl.scrollHeight - 40;
+  const row = document.createElement('div');
+  row.className = `r ${o} ${k}`;
+  let no = n ? String(n) : '', src;
+  if (k === 'cmd') src = esc(txt);
+  else if (k === 'call') src = `<i class="ar">▶</i>${esc(txt)}`;
+  else if (k === 'line') src = hl(txt);
+  else if (k === 'ret') src = `<i class="ar">↩</i>return ${hl(txt)}`;
+  else if (k === 'out') { no = '»'; src = esc(txt); }
+  else if (k === 'rep') { no = '…'; src = esc(txt); }
+  else { no = '!'; src = esc(txt); }
+  row.innerHTML = `<span class="no">${no}</span><span class="src">${src}</span>`;
+  if (lastRow) lastRow.classList.remove('now');
+  row.classList.add('now'); lastRow = row;
+  trEl.appendChild(row);
+  while (trEl.childElementCount > 600) trEl.firstElementChild.remove();
+  if (k !== 'cmd' && k !== 'rep') { total++; $('#t-cnt').textContent = total + ' líneas'; }
+  if (stick) trEl.scrollTop = trEl.scrollHeight;
+}
+$('#t-pausa').addEventListener('click', () => {
+  paused = !paused;
+  $('#t-pausa').textContent = paused ? 'SEGUIR' : 'PAUSA';
+  $('#th').classList.toggle('paused', paused);
+  $('#live').textContent = paused ? 'EN PAUSA' : 'EJECUTANDO';
+  if (!paused) kick();
+});
+$('#t-vel').addEventListener('click', () => {
+  speedIdx = (speedIdx + 1) % SPEEDS.length;
+  $('#t-vel').textContent = 'VEL x' + SPEEDS[speedIdx];
+});
+$('#t-limpiar').addEventListener('click', () => { queue.length = 0; trEl.innerHTML = ''; lastRow = null; total = 0; $('#t-cnt').textContent = '0 líneas'; });
+
+/* ===================================================== interfaz según el estado */
+const OVERLAYS = ['intro', 'pregunta', 'resultado', 'fin'];
+function showOverlay(name) {
+  OVERLAYS.forEach((o) => $('#ov-' + o).classList.toggle('hidden', o !== name));
+}
+let shownQ = null;
+
+function onState(prev, s) {
+  (s.eventos || []).forEach((ev) => {
+    if (ev.tipo === 'golpe') addHit(ev);
+    else if (ev.tipo === 'vida') { addHeal(ev); fx('flash'); }
+  });
+  // HUD
+  const hv = $('#h-vidas');
+  hv.innerHTML = '';
+  for (let i = 0; i < s.vidas_max; i++) {
+    const im = new Image(); im.src = url(i < s.vidas ? SPR.heart : SPR.heartOff); im.alt = i < s.vidas ? 'vida' : 'sin vida';
+    if (prev && s.vidas > prev.vidas && i === s.vidas - 1) im.className = 'pop';
+    hv.appendChild(im);
+  }
+  $('#h-puntos').textContent = String(s.puntos).padStart(3, '0') + '/' + s.maximo;
+  $('#h-sala').textContent = s.sala ? `${s.sala}/${s.total_salas}` : '-/' + s.total_salas;
+  $('#h-nivel').textContent = s.sala ? s.nivel.toUpperCase() : '-';
+
+  // mapa nuevo
+  if (s.mapa && s.mapa.uid !== bgUid) {
+    bg = buildBackground(s); bgUid = s.mapa.uid;
+    banner(`SALA ${s.sala}/${s.total_salas}<br>${esc(s.tema.toUpperCase())}`);
+  }
+
+  // registro de mensajes
+  $('#log').innerHTML = s.mensajes.map((m) => `<div class="${m[0]}">${m[0] === 'sala' ? '▸ ' : '› '}${esc(m[1])}</div>`).join('');
+
+  // capas
+  const stage = $('#stage');
+  if (s.fase === 'titulo') { showOverlay('intro'); }
+  else if (s.fase === 'mapa') { showOverlay(null); shownQ = null; }
+  else if (s.fase === 'pregunta') {
+    showOverlay('pregunta');
+    const key = s.sala + ':' + s.pregunta.numero;
+    if (shownQ !== key) { buildPregunta(s); shownQ = key; $('#ans').value = ''; }
+    updatePregunta(s);
+    setTimeout(() => $('#ans').focus({ preventScroll: true }), 30);
+  } else if (s.fase === 'resultado') {
+    showOverlay('resultado'); buildResultado(s); shownQ = null;
+    if (!prev || prev.fase !== 'resultado') fx(s.resultado.correcto ? 'flash' : 'hurt');
+    setTimeout(() => { const b = $('#btn-cont'); if (b) b.focus({ preventScroll: true }); }, 60);
+  } else if (s.fase === 'fin') {
+    showOverlay('fin'); buildFin(s); shownQ = null;
+    setTimeout(() => { const b = $('#btn-otra'); if (b) b.focus({ preventScroll: true }); }, 60);
+  }
+}
+
+function fx(kind) {
+  const st = $('#stage');
+  st.classList.remove('flash', 'hurt', 'shake');
+  void st.offsetWidth;
+  st.classList.add(kind);
+  if (kind === 'hurt') st.classList.add('shake');
+  setTimeout(() => st.classList.remove('flash', 'hurt', 'shake'), 600);
+}
+function banner(html) {
+  const b = $('#banner');
+  b.innerHTML = html;
+  b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+}
+
+function buildPregunta(s) {
+  $('#q-titulo').textContent = `NODO ${s.pregunta.numero} DE ${s.pregunta.total}`;
+  $('#q-sub').textContent = `SALA ${s.sala} · ${s.tema.toUpperCase()}`;
+  $('#q-codigo').innerHTML = hl(s.pregunta.codigo);
+  $('#q-enun').textContent = s.pregunta.enunciado;
+}
+function updatePregunta(s) {
+  const p = $('#q-pista');
+  p.classList.toggle('hidden', !s.pregunta.pista_usada);
+  p.textContent = s.pregunta.pista_usada ? 'Pista: ' + s.pregunta.pista : '';
+  $('#q-aviso').textContent = s.aviso || '';
+}
+function buildResultado(s) {
+  const r = s.resultado;
+  const parts = [];
+  parts.push(r.correcto
+    ? `<h2 class="ok">¡CORRECTO!</h2><p class="big" style="color:var(--green)">+${r.puntos} puntos</p>`
+    : `<h2 class="mal">INCORRECTO</h2><p class="big" style="color:var(--red)">−1 vida</p>`);
+  if (!r.correcto) parts.push(`<p>Tu respuesta: <b style="color:var(--orange);font-weight:normal">${esc(r.dada)}</b></p><p>La respuesta era: <b style="color:var(--green);font-weight:normal">${esc(r.esperada)}</b></p>`);
+  parts.push(`<p>${esc(r.explicacion)}</p>`);
+  r.extra.forEach((x) => parts.push(`<p class="extra">★ ${esc(x)}</p>`));
+  if (s.vidas <= 0) parts.push('<p class="mal" style="color:var(--red)">Te quedaste sin vidas...</p>');
+  parts.push('<div class="btns"><button class="btn" id="btn-cont" type="button">CONTINUAR</button></div>');
+  $('#res-box').innerHTML = parts.join('');
+  $('#btn-cont').addEventListener('click', () => call('continuar'));
+}
+function buildFin(s) {
+  const f = s.fin;
+  const pct = Math.round((f.puntos / f.maximo) * 100);
+  $('#fin-box').innerHTML = `
+    <h2 class="${f.victoria ? 'ok' : 'mal'}">${f.victoria ? '¡VICTORIA!' : 'DERROTA'}</h2>
+    ${f.lineas.map((l) => `<p>${esc(l)}</p>`).join('')}
+    <p class="big">${f.puntos} <span style="font-size:12px;color:var(--dim)">/ ${f.maximo} PUNTOS</span></p>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <p>Nivel alcanzado: <b style="color:var(--yellow);font-weight:normal">${esc(f.nivel)}</b></p>
+    <div class="btns"><button class="btn" id="btn-otra" type="button">JUGAR DE NUEVO</button></div>`;
+  $('#btn-otra').addEventListener('click', () => call('nueva_partida', S.nombre));
+}
+
+/* ===================================================== entradas */
+const MOVES = {
+  ArrowUp: [0, -1], w: [0, -1], W: [0, -1], ArrowDown: [0, 1], s: [0, 1], S: [0, 1],
+  ArrowLeft: [-1, 0], a: [-1, 0], A: [-1, 0], ArrowRight: [1, 0], d: [1, 0], D: [1, 0],
+};
+window.addEventListener('keydown', (e) => {
+  if (!S || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (S.fase === 'mapa' && MOVES[e.key]) {
+    e.preventDefault(); call('mover', ...MOVES[e.key]);
+  } else if (S.fase === 'pregunta' && e.key === 'Escape') {
+    call('cerrar');
+  } else if ((S.fase === 'resultado' || S.fase === 'fin') && (e.key === 'Enter' || e.key === ' ') && e.target.tagName !== 'BUTTON') {
+    e.preventDefault();
+    call(S.fase === 'resultado' ? 'continuar' : 'nueva_partida', ...(S.fase === 'fin' ? [S.nombre] : []));
+  }
+});
+document.querySelectorAll('.dpad button').forEach((b) =>
+  b.addEventListener('click', () => { if (S && S.fase === 'mapa') call('mover', +b.dataset.dx, +b.dataset.dy); }));
+
+$('#q-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const v = $('#ans').value;
+  $('#ans').value = '';
+  call('responder', v);
+});
+$('#btn-pista').addEventListener('click', () => { call('pista'); $('#ans').focus(); });
+$('#btn-salir').addEventListener('click', () => call('cerrar'));
+
+function empezar() {
+  if (!apiFn) return;
+  call('nueva_partida', $('#nombre').value);
+}
+$('#btn-jugar').addEventListener('click', empezar);
+$('#nombre').addEventListener('keydown', (e) => { if (e.key === 'Enter') empezar(); });
+
+/* ===================================================== arranque de Python */
+async function boot() {
+  const status = $('#status');
+  try {
+    if (typeof loadPyodide !== 'function') throw new Error('pyodide.js no se pudo descargar');
+    status.textContent = 'Descargando Python (Pyodide)… la primera vez tarda unos segundos.';
+    const py = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/' });
+    status.textContent = 'Cargando las reglas del juego en Python…';
+    const src = $('#game-py').textContent.replace(/^\n/, '');
+    py.globals.set('SRC_JUEGO', src);
+    apiFn = py.runPython('juego = {"SRC_JUEGO": SRC_JUEGO}\nexec(compile(SRC_JUEGO, "<juego>", "exec"), juego)\njuego["api"]');
+    $('#pyver').textContent = 'Python ' + py.runPython('import sys\nsys.version.split()[0]');
+    call('consultar');
+    $('#loadbar').classList.add('done');
+    status.textContent = '¡Listo! Escribe tu nombre y pulsa JUGAR.';
+    $('#btn-jugar').disabled = false;
+    $('#nombre').focus({ preventScroll: true });
+  } catch (err) {
+    console.error(err);
+    status.classList.add('err');
+    status.textContent = 'No se pudo cargar Python. Este juego necesita internet para descargar Pyodide. (' + err.message + ')';
+    $('#loadbar').classList.add('hidden');
+  }
+}
+boot();
+
+/* ===================================================== animación de inicio (8 bits) */
+(() => {
+  const ov = $('#ov-splash'), c = $('#cv-splash'), g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  const W = 240, H = 176;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FONT = (px) => `${px}px "Press Start 2P", "Courier New", monospace`;
+  let t0 = 0, raf = 0, done = false;
+
+  const txt = (s, x, y, color, px = 8, shadow) => {
+    g.font = FONT(px); g.textBaseline = 'top';
+    if (shadow) { g.fillStyle = shadow; g.fillText(s, x + 1, y + 1); }
+    g.fillStyle = color; g.fillText(s, x, y);
+  };
+  const center = (s, y, color, px, shadow) => txt(s, Math.round((W - s.length * px) / 2), y, color, px, shadow);
+  const clamp01 = (v) => Math.max(0, Math.min(1, v));
+  const ease = (v) => { v = clamp01(v); return v * v * (3 - 2 * v); };
+
+  /* --- fase 1: arranque del "BIOS" --- */
+  const dots = (a, b) => a + ' ' + '.'.repeat(Math.max(2, 22 - a.length - b.length)) + ' ' + b;
+  const BIOS = [
+    ['CUNTRON BIOS V20.45', '#f4f4f4', 0],
+    [dots('MEMORIA 64K', 'OK'), '#a7f070', 260],
+    [dots('VIDEO 8-BIT', 'OK'), '#a7f070', 520],
+    [dots('PYTHON 3', 'OK'), '#a7f070', 780],
+    [dots('SERVIDOR CUN', 'ERROR'), '#e8475f', 1040],
+    ['VIRUS BUG MAYOR DETECTADO', '#e8475f', 1300],
+    ['> CARGANDO MISION', '#ffcd75', 1560],
+  ];
+  function drawBios(t) {
+    g.fillStyle = '#05060d'; g.fillRect(0, 0, W, H);
+    BIOS.forEach(([s, color, start], i) => {
+      if (t < start) return;
+      const n = Math.min(s.length, Math.floor((t - start) / 16));
+      txt(s.slice(0, n), 8, 10 + i * 13, color, 8);
+      if (i === BIOS.length - 1 && n === s.length && Math.floor(t / 250) % 2 === 0) { g.fillStyle = '#ffcd75'; g.fillRect(8 + s.length * 8, 10 + i * 13, 8, 8); }
+    });
+  }
+  function drawGlitch(t) {
+    drawBios(2000);
+    for (let k = 0; k < 6; k++) {
+      const y = Math.floor(Math.random() * H), h = 3 + Math.floor(Math.random() * 16), dx = Math.floor((Math.random() - .5) * 40);
+      g.drawImage(c, 0, y, W, h, dx, y, W, h);
+    }
+    for (let k = 0; k < 5; k++) {
+      g.fillStyle = ['rgba(115,239,247,.5)', 'rgba(255,111,174,.5)', 'rgba(244,244,244,.6)'][k % 3];
+      g.fillRect(0, Math.floor(Math.random() * H), W, 1 + Math.floor(Math.random() * 3));
+    }
+  }
+
+  /* --- fase 2: título --- */
+  const T0 = THEMES[0];
+  function letters(str, x, y, px, start, u, colorFor) {
+    for (let i = 0; i < str.length; i++) {
+      const ti = start + i * 70;
+      if (u < ti || str[i] === ' ') continue;
+      const k = clamp01((u - ti) / 200);
+      const dy = Math.round(-(1 - k) * (1 - k) * 34);
+      txt(str[i], x + i * px, y + dy, colorFor(u - ti), px, '#5d275d');
+    }
+  }
+  function drawTitle(u) {
+    g.fillStyle = '#05060d'; g.fillRect(0, 0, W, H);
+    // lluvia de bits (el servidor infectado)
+    for (let i = 0; i < 24; i++) {
+      const sp = 22 + (i * 37) % 30, off = (i * 53) % H;
+      const y = ((u / 1000) * sp + off) % (H + 40) - 20;
+      for (let k = 0; k < 6; k++) {
+        const yy = Math.round(y - k * 7);
+        if (yy < 0 || yy > 118) continue;
+        g.fillStyle = k === 0 ? '#38b764' : k < 3 ? '#1d7f43' : '#143d2a';
+        g.fillRect(i * 10 + 3, yy, 3, 4);
+      }
+    }
+    // marcador arcade
+    txt('1UP 000', 6, 2, '#73eff7', 8);
+    txt('MAX 175', W - 6 - 7 * 8, 2, '#ffcd75', 8);
+    // suelo de ladrillos
+    g.fillStyle = T0.wall; g.fillRect(0, 122, W, 8);
+    g.fillStyle = T0.light; g.fillRect(0, 123, W, 1);
+    g.fillStyle = T0.mortar; g.fillRect(0, 122, W, 1); g.fillRect(0, 129, W, 1);
+    for (let x = 0; x < W; x += 16) g.fillRect(x + ((x / 16) % 2 ? 8 : 0), 124, 1, 5);
+    g.fillStyle = '#0b0e22'; g.fillRect(0, 130, W, H - 130);
+
+    // título letra por letra
+    const flash = (age) => age < 160 ? '#f4f4f4' : '#ffcd75';
+    const flash2 = (age) => age < 160 ? '#f4f4f4' : '#ef7d57';
+    letters('MISION:', 78, 16, 12, 100, u, flash2);
+    if (u > 100 + 4 * 70 + 200) { g.fillStyle = '#ef7d57'; g.fillRect(78 + 4 * 12 + 6, 13, 2, 1); g.fillRect(78 + 4 * 12 + 5, 14, 2, 1); g.fillRect(78 + 4 * 12 + 4, 15, 2, 1); } // tilde de la Ó
+    letters('RESCATAR', 56, 36, 16, 650, u, flash);
+    letters('LA CUN', 72, 58, 16, 1250, u, flash);
+
+    // frase
+    const tag = 'APRENDE PYTHON JUGANDO';
+    if (u > 1900) txt(tag.slice(0, Math.floor((u - 1900) / 28)), Math.round((W - tag.length * 8) / 2), 88, '#73eff7', 8);
+
+    // héroe vs BUG MAYOR
+    const walking = u > 700 && u < 2500;
+    const px = Math.round(-18 + 72 * ease((u - 700) / 1800));
+    const bob = walking ? Math.floor(u / 140) % 2 : Math.floor(u / 380) % 2;
+    g.drawImage(SPR.player, px, 106 - bob, 16, 16);
+    const bx = Math.round(256 - 96 * ease((u - 1100) / 1500));
+    const wob = Math.floor(u / 200) % 2;
+    if (u > 1100) {
+      if (u < 2600 && Math.random() < .25) g.drawImage(SPR.boss, bx + (Math.random() < .5 ? -2 : 2), 106 - wob, 16, 16);
+      else g.drawImage(SPR.boss, bx, 106 - wob, 16, 16);
+    }
+    g.drawImage(SPR.bug, Math.round(W - ((u / 28) % (W + 40))), 114, 8, 8);
+    if (u > 2600) center('VS', 104, Math.floor(u / 220) % 2 ? '#e8475f' : '#ffcd75', 16, '#5d275d');
+
+    // pulsa una tecla
+    const on = reduced || Math.floor(u / 500) % 2 === 0;
+    if (u > 2800) {
+      if (on) center('PRESIONA UNA TECLA', 140, '#ffcd75', 8);
+      center('O TOCA LA PANTALLA', 156, '#566c86', 8);
+    }
+  }
+
+  function frame(now) {
+    if (done) return;
+    raf = requestAnimationFrame(frame);
+    const t = now - t0;
+    if (t < 2000) drawBios(t); else if (t < 2300) drawGlitch(t); else drawTitle(t - 2300);
+  }
+  function start() { t0 = performance.now() - (reduced ? 6000 : 0); raf = requestAnimationFrame(frame); }
+  Promise.race([
+    document.fonts ? document.fonts.load(FONT(16), 'MISION RESCATAR LA CUN') : Promise.resolve(),
+    new Promise((r) => setTimeout(r, 1200)),
+  ]).then(start, start);
+
+  function finish() {
+    if (done) return;
+    done = true; cancelAnimationFrame(raf);
+    window.removeEventListener('keydown', onKey, true);
+    ov.classList.add('out');
+    setTimeout(() => {
+      ov.classList.add('hidden');
+      const n = $('#nombre');
+      if (n && !$('#btn-jugar').disabled) n.focus({ preventScroll: true });
+    }, reduced ? 20 : 350);
+  }
+  function onKey(e) {
+    if (['Shift', 'Control', 'Alt', 'Meta', 'Tab'].includes(e.key)) return;
+    e.preventDefault(); e.stopPropagation(); finish();
+  }
+  window.addEventListener('keydown', onKey, true);
+  ov.addEventListener('click', finish);
+})();
+
+/* perilla CRT: activa o desactiva las líneas de barrido (se recuerda en el navegador) */
+(() => {
+  const tv = $('#tv'), knob = $('#knob-crt');
+  const apply = (on) => { tv.classList.toggle('nofx', !on); knob.setAttribute('aria-pressed', String(on)); };
+  let on = true;
+  try { on = localStorage.getItem('cun-crt') !== 'off'; } catch (e) { /* sin almacenamiento */ }
+  apply(on);
+  knob.addEventListener('click', () => {
+    on = !on; apply(on);
+    try { localStorage.setItem('cun-crt', on ? 'on' : 'off'); } catch (e) { /* sin almacenamiento */ }
+    knob.blur();
+  });
+})();
+
+/* leyenda */
+$('#legend').innerHTML = [
+  [SPR.player, 'Tú'], [SPR.termPend, 'Nodo (pregunta)'], [SPR.termDone, 'Resuelto'],
+  [SPR.heart, 'Corazón (+1 vida)'], [SPR.bug, 'Bug (aplástalo)'], [SPR.doorShut, 'Puerta'], [SPR.doorOpen, 'Abierta'], [SPR.boss, 'BUG MAYOR'],
+].map(([s, t]) => `<span><img src="${url(s)}" alt="">${t}</span>`).join('');
+})();
+</script>
+</body>
+</html>
